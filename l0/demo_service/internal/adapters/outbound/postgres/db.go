@@ -18,7 +18,6 @@ func New(ctx context.Context, databaseURL string) (*DB, error) {
 		return nil, fmt.Errorf("parse database url: %w", err)
 	}
 
-	// Sensible demo defaults. Tweak later if needed.
 	cfg.MaxConns = 10
 	cfg.MinConns = 2
 	cfg.MaxConnLifetime = 30 * time.Minute

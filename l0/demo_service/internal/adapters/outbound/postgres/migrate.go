@@ -36,7 +36,6 @@ func RunMigrations(ctx context.Context, pool *pgxpool.Pool, dir string) error {
 		return nil
 	}
 
-	// Prevent concurrent migration runs (especially in docker compose restarts).
 	lockID := advisoryLockID("demo_service_migrations")
 	if _, err := pool.Exec(ctx, `SELECT pg_advisory_lock($1)`, lockID); err != nil {
 		return fmt.Errorf("advisory lock: %w", err)
@@ -57,7 +56,6 @@ func RunMigrations(ctx context.Context, pool *pgxpool.Pool, dir string) error {
 			continue
 		}
 
-		// Each migration in its own tx.
 		tx, err := pool.BeginTx(ctx, pgx.TxOptions{})
 		if err != nil {
 			return fmt.Errorf("begin tx (v=%d): %w", m.Version, err)
@@ -138,7 +136,6 @@ func loadMigrations(dir string) ([]Migration, error) {
 			continue
 		}
 
-		// Expect: 0001_init.up.sql  -> version=1
 		version, ok := parseVersion(name)
 		if !ok {
 			return nil, fmt.Errorf("invalid migration filename: %s (expected like 0001_name.up.sql)", name)

@@ -63,8 +63,6 @@ type Item struct {
 	Status      int    `json:"status"`
 }
 
-// Validate keeps domain rules minimal but real.
-// Keep it strict enough to reject garbage messages from Kafka.
 func (o Order) Validate() error {
 	if o.OrderUID == "" {
 		return ErrInvalidOrder
@@ -76,7 +74,6 @@ func (o Order) Validate() error {
 		return ErrInvalidOrder
 	}
 	if o.Payment.Transaction != o.OrderUID {
-		// In your sample they match. If the real stream differs, relax later.
 		return ErrInvalidOrder
 	}
 	if o.DateCreated.IsZero() {

@@ -49,12 +49,10 @@ func (s *OrderService) GetByID(ctx context.Context, orderUID string) (domain.Ord
 		return domain.Order{}, fmt.Errorf("db get: %w", err)
 	}
 
-	// Fill cache on read to speed subsequent requests.
 	s.cache.Set(ctx, o)
 	return o, nil
 }
 
-// WarmCache restores latest N orders from DB into memory on startup.
 func (s *OrderService) WarmCache(ctx context.Context, limit int) (int, error) {
 	if limit <= 0 {
 		return 0, nil

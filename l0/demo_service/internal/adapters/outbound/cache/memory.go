@@ -61,7 +61,6 @@ func (c *MemoryCache) Len(_ context.Context) int {
 	return n
 }
 
-// Optional: use this later to expose cache metrics in logs/UI.
 func (c *MemoryCache) Stats() (hits uint64, misses uint64) {
 	return c.stats.Snapshot()
 }

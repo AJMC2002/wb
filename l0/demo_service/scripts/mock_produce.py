@@ -18,12 +18,10 @@ def mutate_order(base: dict) -> dict:
     o["customer_id"] = f"cust{random.randint(1,500)}"
     o["date_created"] = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
 
-    # payment transaction usually matches order_uid in your validation
     o["payment"]["transaction"] = uid
     o["payment"]["amount"] = random.randint(100, 50000)
     o["payment"]["payment_dt"] = int(time.time())
 
-    # items
     for it in o.get("items", []):
         it["rid"] = uuid.uuid4().hex
         it["chrt_id"] = random.randint(1_000_000, 9_999_999)

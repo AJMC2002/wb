@@ -43,7 +43,7 @@ func (c *Consumer) Run(ctx context.Context) {
 	for {
 		msg, err := c.reader.FetchMessage(ctx)
 		if err != nil {
-			// Normal shutdown path
+			// normal shutdown
 			if errors.Is(err, context.Canceled) {
 				return
 			}
@@ -60,7 +60,6 @@ func (c *Consumer) Run(ctx context.Context) {
 		}
 
 		if err := c.svc.Ingest(ctx, order); err != nil {
-			// Important: do NOT commit, so message can be retried.
 			log.Printf("[kafka] ingest failed (no commit) order_uid=%s err=%v", order.OrderUID, err)
 			time.Sleep(1 * time.Second)
 			continue
@@ -68,7 +67,6 @@ func (c *Consumer) Run(ctx context.Context) {
 
 		if err := c.reader.CommitMessages(ctx, msg); err != nil {
 			log.Printf("[kafka] commit error: %v", err)
-			// commit failing means it may redeliver; acceptable for demo.
 		}
 	}
 }

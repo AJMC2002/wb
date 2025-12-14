@@ -29,7 +29,7 @@ func main() {
 	}
 	defer db.Close()
 
-	// ✅ autorun migrations
+	// migrations
 	migCtx, cancel := context.WithTimeout(ctx, 30*time.Second)
 	defer cancel()
 	if err := postgres.RunMigrations(migCtx, db.Pool, cfg.MigrationsDir); err != nil {
@@ -40,7 +40,7 @@ func main() {
 	memCache := cache.NewMemoryCache()
 	svc := service.NewOrderService(repo, memCache)
 
-	// ✅ warm cache
+	// warm cache
 	if n, err := svc.WarmCache(ctx, cfg.CacheWarmLimit); err != nil {
 		log.Printf("[warmup] failed: %v", err)
 	} else {
@@ -53,7 +53,7 @@ func main() {
 	httpSrv := runtime.NewHTTPServer(cfg.HTTPAddr, mux)
 	httpSrv.Start()
 
-	// Kafka consumer
+	// kafka consumer
 	consumer := kafkain.NewConsumer(kafkain.ConsumerConfig{
 		Brokers:  cfg.KafkaBrokers,
 		Topic:    cfg.KafkaTopic,
