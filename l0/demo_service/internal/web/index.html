@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="ru">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Демо</title>
+
+    <script
+      type="module"
+      src="https://cdn.jsdelivr.net/gh/starfederation/datastar@v1.0.0-RC.6/bundles/datastar.js"
+    ></script>
+
+    <style>
+      body { font-family: system-ui, sans-serif; margin: 24px; }
+      .row { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
+      input { padding: 10px 12px; min-width: 320px; }
+      button { padding: 10px 12px; cursor: pointer; }
+      pre { background: #111; color: #eee; padding: 16px; border-radius: 12px; overflow: auto; }
+      .muted { opacity: .75; }
+      .spinner { display:inline-block; width:12px; height:12px; border:2px solid currentColor; border-right-color:transparent; border-radius:50%; animation:spin .7s linear infinite; }
+      @keyframes spin { to { transform: rotate(360deg); } }
+    </style>
+  </head>
+
+  <body data-signals="{order_id: '', fetching: false}">
+    <h1>Заявки</h1>
+
+    <div class="row">
+      <label class="muted">ID Заявки</label>
+
+      <input 
+        data-bind-order_id
+        data-on:keydown="evt.key === 'Enter' && @get('/ui/order')"
+        placeholder="Вводите order_uid..." 
+      />
+
+      <button
+        data-on:click="@get('/ui/order')"
+        data-indicator:fetching
+      >
+        Получить
+      </button>
+
+      <span class="muted" data-show="$fetching">
+        <span class="spinner"></span> Загрузка...
+      </span>
+    </div>
+
+    <p id="status" class="muted">Ожидает заявку...</p>
+    <pre id="result">{}</pre>
+  </body>
+</html>
