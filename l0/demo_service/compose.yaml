@@ -1,13 +1,10 @@
 services:
   postgres:
     image: postgres:18-alpine
-    container_name: postgres
-    environment:
-      POSTGRES_DB: ${POSTGRES_DB}
-      POSTGRES_USER: ${POSTGRES_USER}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    env_file:
+      - .env
     ports:
-      - "${POSTGRES_PORT}:5432"
+      - "5432:5432"
     volumes:
       - pgdata:/var/lib/postgresql/data
     healthcheck:
@@ -17,43 +14,42 @@ services:
       retries: 20
 
   kafka:
-    image: bitnami/kafka:latest
-    container_name: kafka
+    image: apache/kafka:latest
+    env_file:
+      - .env
     ports:
-      - "9092:9092"
-      - "29092:29092"
+      - "9092:9092"   # host access
     environment:
-      KAFKA_ENABLE_KRAFT: "yes"
-      KAFKA_CFG_PROCESS_ROLES: "broker,controller"
-      KAFKA_CFG_NODE_ID: "1"
-      KAFKA_CFG_CONTROLLER_LISTENER_NAMES: "CONTROLLER"
-      KAFKA_CFG_CONTROLLER_QUORUM_VOTERS: "1@kafka:9093"
-
-      KAFKA_CFG_LISTENERS: "PLAINTEXT://:9092,CONTROLLER://:9093,EXTERNAL://:29092"
-      KAFKA_CFG_ADVERTISED_LISTENERS: "PLAINTEXT://kafka:9092,EXTERNAL://localhost:29092"
-      KAFKA_CFG_LISTENER_SECURITY_PROTOCOL_MAP: "PLAINTEXT:PLAINTEXT,CONTROLLER:PLAINTEXT,EXTERNAL:PLAINTEXT"
-      KAFKA_CFG_INTER_BROKER_LISTENER_NAME: "PLAINTEXT"
-
-      KAFKA_CFG_AUTO_CREATE_TOPICS_ENABLE: "true"
-      KAFKA_CFG_OFFSETS_TOPIC_REPLICATION_FACTOR: "1"
-      KAFKA_CFG_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: "1"
-      KAFKA_CFG_TRANSACTION_STATE_LOG_MIN_ISR: "1"
-      KAFKA_CFG_GROUP_INITIAL_REBALANCE_DELAY_MS: "0"
-      ALLOW_PLAINTEXT_LISTENER: "yes"
-
+      KAFKA_LISTENERS: "CONTROLLER://localhost:9091,HOST://0.0.0.0:9092,DOCKER://0.0.0.0:9093"
+      KAFKA_ADVERTISED_LISTENERS: "HOST://localhost:9092,DOCKER://kafka:9093"
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: "CONTROLLER:PLAINTEXT,HOST:PLAINTEXT,DOCKER:PLAINTEXT"
+  
+      KAFKA_NODE_ID: "1"
+      KAFKA_PROCESS_ROLES: "broker,controller"
+      KAFKA_CONTROLLER_LISTENER_NAMES: "CONTROLLER"
+      KAFKA_CONTROLLER_QUORUM_VOTERS: "1@localhost:9091"
+  
+      KAFKA_INTER_BROKER_LISTENER_NAME: "DOCKER"
+  
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: "1"
     volumes:
-      - kafkadata:/bitnami/kafka
-
+      - kafkadata:/var/lib/kafka/data
+    healthcheck:
+      test: ["CMD-SHELL", "/opt/kafka/bin/kafka-broker-api-versions.sh --bootstrap-server kafka:9093 >/dev/null 2>&1"]
+      interval: 5s
+      timeout: 5s
+      retries: 30
+  
   app:
     build:
-      context: .
       dockerfile: Dockerfile
-    container_name: app
+    env_file:
+      - .env
     depends_on:
       postgres:
         condition: service_healthy
       kafka:
-        condition: service_started
+        condition: service_healthy
     ports:
       - "8081:8081"
     restart: unless-stopped
